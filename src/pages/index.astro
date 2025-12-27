@@ -1,0 +1,22 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AppCard from "../components/AppCard.astro";
+import { getEnabledApps } from "../lib/apps";
+
+const apps = getEnabledApps();
+---
+
+<Layout pageTitle="Home">
+	<div class="flex min-h-screen flex-col items-center px-12 pt-12">
+		<header class="mb-10 text-center">
+			<h1 class="mb-2 text-4xl font-bold tracking-tight text-gray-50">Astro Tauri Utilities</h1>
+			<p class="text-base font-light text-gray-400">
+				Una piccola serie di micro app utili per la vita lavorativa di tutti i giorni 😁
+			</p>
+		</header>
+
+		<div class="grid w-full max-w-3xl auto-rows-fr grid-cols-4 gap-5">
+			{apps.map((app) => <AppCard app={app} />)}
+		</div>
+	</div>
+</Layout>

@@ -1,0 +1,94 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+
+// Classi comuni per i textarea
+const textareaBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none resize-none placeholder:text-gray-600";
+const textareaFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+// Classi comuni per i bottoni
+const buttonBase =
+	"flex-1 px-6 py-3 text-sm sm:text-base font-semibold text-white rounded-lg transition-colors duration-200 shadow-lg";
+---
+
+<MicroAppLayout pageTitle="Base64 Encoder/Decoder" title="Base64 Encoder/Decoder">
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-2">
+			<label for="input" class="text-sm font-medium text-gray-400 sm:text-base"> Input </label>
+			<textarea
+				id="input"
+				rows="6"
+				class={`${textareaBase} ${textareaFocus}`}
+				placeholder="Inserisci il testo da codificare o decodificare..."></textarea>
+		</div>
+
+		<div class="flex flex-col gap-2">
+			<label for="output" class="text-sm font-medium text-gray-400 sm:text-base"> Output </label>
+			<textarea
+				id="output"
+				rows="6"
+				readonly
+				class={textareaBase}
+				placeholder="Il risultato apparirà qui..."></textarea>
+		</div>
+
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<button
+				id="encodeButton"
+				class={`${buttonBase} bg-green-600 hover:bg-green-700 active:bg-green-800 shadow-green-500/20`}
+			>
+				Encode
+			</button>
+			<button
+				id="decodeButton"
+				class={`${buttonBase} bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-blue-500/20`}
+			>
+				Decode
+			</button>
+			<button
+				id="resetButton"
+				class={`${buttonBase} bg-gray-700 hover:bg-gray-600 active:bg-gray-500 shadow-gray-500/20`}
+			>
+				Reset
+			</button>
+		</div>
+	</div>
+</MicroAppLayout>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const encodeButton = document.getElementById("encodeButton");
+		const decodeButton = document.getElementById("decodeButton");
+		const resetButton = document.getElementById("resetButton");
+
+		const inputEl = document.getElementById("input") as HTMLTextAreaElement | null;
+		const outputEl = document.getElementById("output") as HTMLTextAreaElement | null;
+
+		encodeButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			try {
+				outputEl.value = btoa(inputEl.value);
+			} catch {
+				outputEl.value = "Errore durante l'encoding";
+			}
+		});
+
+		decodeButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			try {
+				outputEl.value = atob(inputEl.value);
+			} catch {
+				outputEl.value = "Errore durante il decoding";
+			}
+		});
+
+		resetButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			inputEl.value = "";
+			outputEl.value = "";
+		});
+	});
+</script>

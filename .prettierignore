@@ -1,0 +1,39 @@
+# Ignore artifacts:
+dist
+.astro
+
+# Standard
+**/.git
+**/.svn
+**/.hg
+**/node_modules
+
+# lockfiles
+pnpm-lock.json
+yarn.lock
+package-lock.json
+Cargo.lock
+
+# Build outputs
+src-tauri/target
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Tauri
+src-tauri/gen

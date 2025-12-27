@@ -1,0 +1,46 @@
+{
+	"name": "astro-tauri",
+	"type": "module",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "astro dev",
+		"start": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"astro": "astro",
+		"tauri": "tauri",
+		"tauri:dev": "tauri dev",
+		"tauri:build": "tauri build",
+		"lint": "eslint . --ext .ts,.tsx,.js,.jsx,.astro",
+		"lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx,.astro --fix",
+		"format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,astro,css}\"",
+		"format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,astro,css}\"",
+		"fix": "npm run lint:fix && npm run format",
+		"check": "npm run lint && npm run format:check"
+	},
+	"dependencies": {
+		"@astrojs/react": "^4.4.2",
+		"@tailwindcss/vite": "^4.1.18",
+		"@tauri-apps/api": "^2.9.1",
+		"@types/react": "^19.2.7",
+		"@types/react-dom": "^19.2.3",
+		"astro": "^5.6.1",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"tailwindcss": "^4.1.18"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.39.2",
+		"@tauri-apps/cli": "^2.9.6",
+		"@typescript-eslint/parser": "^8.50.1",
+		"eslint": "^9.39.2",
+		"eslint-plugin-astro": "^1.5.0",
+		"eslint-plugin-jsx-a11y": "^6.10.2",
+		"eslint-plugin-prettier": "^5.5.4",
+		"globals": "^16.5.0",
+		"prettier": "^3.7.4",
+		"prettier-plugin-astro": "^0.14.1",
+		"prettier-plugin-tailwindcss": "^0.7.2",
+		"typescript-eslint": "^8.50.1"
+	}
+}

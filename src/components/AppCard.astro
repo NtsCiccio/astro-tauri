@@ -1,0 +1,24 @@
+---
+interface Props {
+	app: {
+		id: string;
+		name: string;
+		description: string;
+		route: string;
+	};
+}
+
+const { app } = Astro.props;
+---
+
+<a
+	href={app.route}
+	class="app-card flex aspect-square w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-gray-800/50 bg-gray-900/50 p-5 text-center text-inherit no-underline backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-indigo-500/50 hover:bg-gray-800/70 hover:shadow-lg hover:shadow-indigo-500/20"
+>
+	<h3 class="app-name mb-1.5 flex-shrink-0 text-sm font-semibold text-gray-50">
+		{app.name}
+	</h3>
+	<p class="app-description m-0 flex-shrink-0 text-xs leading-tight text-gray-400/80">
+		{app.description}
+	</p>
+</a>

@@ -1,0 +1,25 @@
+---
+interface Props {
+	href?: string;
+	label?: string;
+}
+
+const { href = "/", label = "Indietro" } = Astro.props;
+---
+
+<a
+	href={href}
+	class="group inline-flex items-center gap-2 text-gray-400 no-underline transition-colors duration-200 hover:text-gray-50"
+>
+	<svg
+		class="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1"
+		fill="none"
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+		xmlns="http://www.w3.org/2000/svg"
+	>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"
+		></path>
+	</svg>
+	<span class="text-sm font-medium">{label}</span>
+</a>

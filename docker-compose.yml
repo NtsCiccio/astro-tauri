@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: astro-tauri-frontend:latest
+    container_name: astro-frontend
+    ports:
+      # Mappa la porta 3000 dell'host alla porta 80 del container
+      # (Nginx ascolta sulla porta 80 nel container)
+      - "3000:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

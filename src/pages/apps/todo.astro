@@ -1,0 +1,8 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+import TodoApp from "../../components/todo/TodoApp";
+---
+
+<MicroAppLayout pageTitle="Todo App" title="Todo App">
+	<TodoApp client:idle />
+</MicroAppLayout>
