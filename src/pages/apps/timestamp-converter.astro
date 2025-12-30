@@ -1,0 +1,354 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+
+const inputBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none placeholder:text-gray-600 font-mono";
+const inputFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const textareaBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none resize-none placeholder:text-gray-600 font-mono";
+const textareaFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const buttonBase =
+	"flex-1 px-6 py-3 text-sm sm:text-base font-semibold text-white rounded-lg transition-colors duration-200 shadow-lg";
+---
+
+<MicroAppLayout pageTitle="Timestamp Converter" title="Timestamp Converter">
+	<div class="flex flex-col gap-6">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+			<!-- Conversione da Timestamp a Data -->
+			<div class="flex flex-col gap-4">
+				<h2 class="text-lg font-semibold text-gray-300">Timestamp → Data</h2>
+				
+				<div class="flex flex-col gap-2">
+					<label for="timestampInput" class="text-sm font-medium text-gray-400 sm:text-base"> Timestamp Unix </label>
+					<input
+						id="timestampInput"
+						type="text"
+						class={`${inputBase} ${inputFocus}`}
+						placeholder="Esempio: 1609459200 o 1609459200000"></input>
+					<div class="flex items-center gap-2 mt-1">
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" name="timestampUnit" value="seconds" checked class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 focus:ring-indigo-500" />
+							<span class="text-xs text-gray-400">Secondi</span>
+						</label>
+						<label class="flex items-center gap-2 cursor-pointer">
+							<input type="radio" name="timestampUnit" value="milliseconds" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 focus:ring-indigo-500" />
+							<span class="text-xs text-gray-400">Millisecondi</span>
+						</label>
+					</div>
+				</div>
+
+				<button
+					id="convertToDateButton"
+					class={`${buttonBase} bg-green-600 hover:bg-green-700 active:bg-green-800 shadow-green-500/20`}
+				>
+					Converti a Data
+				</button>
+
+				<div id="dateResults" class="hidden flex flex-col gap-3">
+					<div class="rounded-lg bg-blue-900/30 border border-blue-800 p-4 text-sm">
+						<div id="dateResultsContent" class="flex flex-col gap-2 text-blue-300"></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Conversione da Data a Timestamp -->
+			<div class="flex flex-col gap-4">
+				<h2 class="text-lg font-semibold text-gray-300">Data → Timestamp</h2>
+				
+				<div class="flex flex-col gap-2">
+					<label for="dateInput" class="text-sm font-medium text-gray-400 sm:text-base"> Data </label>
+					<input
+						id="dateInput"
+						type="datetime-local"
+						class={`${inputBase} ${inputFocus}`}></input>
+				</div>
+
+				<div class="flex flex-col gap-2">
+					<label class="text-sm font-medium text-gray-400 sm:text-base"> Fuso Orario </label>
+					<select
+						id="timezoneSelect"
+						class={`${inputBase} ${inputFocus} cursor-pointer`}>
+						<option value="local">Locale</option>
+						<option value="utc">UTC</option>
+					</select>
+				</div>
+
+				<button
+					id="convertToTimestampButton"
+					class={`${buttonBase} bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-blue-500/20`}
+				>
+					Converti a Timestamp
+				</button>
+
+				<div id="timestampResults" class="hidden flex flex-col gap-3">
+					<div class="rounded-lg bg-purple-900/30 border border-purple-800 p-4 text-sm">
+						<div id="timestampResultsContent" class="flex flex-col gap-2 text-purple-300"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="errorMessage" class="hidden rounded-lg bg-red-900/30 border border-red-800 p-3 text-sm text-red-300"></div>
+
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Timestamp Attuale </label>
+				<div class="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+					<div class="flex flex-col gap-2 text-sm">
+						<div class="flex items-center justify-between">
+							<span class="text-gray-400">Unix (secondi):</span>
+							<code id="currentTimestampSeconds" class="text-indigo-400 font-mono"></code>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-gray-400">Unix (millisecondi):</span>
+							<code id="currentTimestampMillis" class="text-indigo-400 font-mono"></code>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-gray-400">Data Locale:</span>
+							<code id="currentDateLocal" class="text-indigo-400 font-mono"></code>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-gray-400">Data UTC:</span>
+							<code id="currentDateUTC" class="text-indigo-400 font-mono"></code>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<button
+				id="useCurrentButton"
+				class={`${buttonBase} bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-500/20`}
+			>
+				Usa Timestamp Attuale
+			</button>
+			<button
+				id="resetButton"
+				class={`${buttonBase} bg-gray-700 hover:bg-gray-600 active:bg-gray-500 shadow-gray-500/20`}
+			>
+				Reset
+			</button>
+		</div>
+	</div>
+</MicroAppLayout>
+
+<script>
+	document.addEventListener("DOMContentLoaded", async () => {
+		// Import dinamico di Luxon per il client-side
+		// @ts-expect-error - Luxon include i suoi tipi, ma TypeScript non li risolve correttamente in questo contesto
+		const { DateTime } = await import("luxon");
+		const convertToDateButton = document.getElementById("convertToDateButton");
+		const convertToTimestampButton = document.getElementById("convertToTimestampButton");
+		const useCurrentButton = document.getElementById("useCurrentButton");
+		const resetButton = document.getElementById("resetButton");
+
+		const timestampInputEl = document.getElementById("timestampInput") as HTMLInputElement | null;
+		const dateInputEl = document.getElementById("dateInput") as HTMLInputElement | null;
+		const timezoneSelectEl = document.getElementById("timezoneSelect") as HTMLSelectElement | null;
+		const timestampUnitRadios = document.querySelectorAll('input[name="timestampUnit"]') as NodeListOf<HTMLInputElement>;
+
+		const dateResultsEl = document.getElementById("dateResults");
+		const dateResultsContentEl = document.getElementById("dateResultsContent");
+		const timestampResultsEl = document.getElementById("timestampResults");
+		const timestampResultsContentEl = document.getElementById("timestampResultsContent");
+		const errorMessageEl = document.getElementById("errorMessage");
+
+		const currentTimestampSecondsEl = document.getElementById("currentTimestampSeconds");
+		const currentTimestampMillisEl = document.getElementById("currentTimestampMillis");
+		const currentDateLocalEl = document.getElementById("currentDateLocal");
+		const currentDateUTCEl = document.getElementById("currentDateUTC");
+
+		function hideError() {
+			if (errorMessageEl) {
+				errorMessageEl.classList.add("hidden");
+				errorMessageEl.textContent = "";
+			}
+		}
+
+		function showError(message: string) {
+			if (errorMessageEl) {
+				errorMessageEl.classList.remove("hidden");
+				errorMessageEl.textContent = message;
+			}
+		}
+
+		function updateCurrentTimestamp() {
+			const now = DateTime.now();
+
+			if (currentTimestampSecondsEl) {
+				currentTimestampSecondsEl.textContent = now.toUnixInteger().toString();
+			}
+			if (currentTimestampMillisEl) {
+				currentTimestampMillisEl.textContent = now.toMillis().toString();
+			}
+			if (currentDateLocalEl) {
+				currentDateLocalEl.textContent = now.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+			}
+			if (currentDateUTCEl) {
+				currentDateUTCEl.textContent = now.toUTC().toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS);
+			}
+		}
+
+		// Aggiorna il timestamp corrente ogni secondo
+		setInterval(updateCurrentTimestamp, 1000);
+		updateCurrentTimestamp();
+
+		function convertTimestampToDate() {
+			if (!timestampInputEl || !dateResultsEl || !dateResultsContentEl) return;
+
+			hideError();
+			dateResultsEl.classList.add("hidden");
+
+			const timestampStr = timestampInputEl.value.trim();
+			if (!timestampStr) {
+				showError("Inserisci un timestamp");
+				return;
+			}
+
+			const timestamp = parseFloat(timestampStr);
+			if (isNaN(timestamp)) {
+				showError("Il timestamp deve essere un numero valido");
+				return;
+			}
+
+			// Determina se è in secondi o millisecondi
+			const selectedUnit = Array.from(timestampUnitRadios).find((r) => r.checked)?.value || "seconds";
+			let dt;
+
+			try {
+				if (selectedUnit === "milliseconds") {
+					dt = DateTime.fromMillis(timestamp);
+				} else {
+					// Se il numero è molto grande, probabilmente è in millisecondi
+					if (timestamp > 1e12) {
+						dt = DateTime.fromMillis(timestamp);
+					} else {
+						dt = DateTime.fromSeconds(timestamp);
+					}
+				}
+
+				if (!dt.isValid) {
+					showError(`Timestamp non valido: ${dt.invalidReason || "errore sconosciuto"}`);
+					return;
+				}
+			} catch (error) {
+				showError("Errore durante la conversione del timestamp");
+				return;
+			}
+
+			// Mostra i risultati
+			let html = "";
+			html += `<div><strong>Data Locale:</strong> ${dt.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}</div>`;
+			html += `<div><strong>Data UTC:</strong> ${dt.toUTC().toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}</div>`;
+			html += `<div><strong>ISO 8601:</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toISO()}</code></div>`;
+			html += `<div><strong>RFC 2822:</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toRFC2822()}</code></div>`;
+			html += `<div><strong>Unix (secondi):</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toUnixInteger()}</code></div>`;
+			html += `<div><strong>Unix (millisecondi):</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toMillis()}</code></div>`;
+
+			// Informazioni aggiuntive con Luxon
+			const now = DateTime.now();
+			const diff = dt.diff(now, ["days", "hours", "minutes", "seconds"]).toObject();
+			const diffObj = dt.diffNow(["days", "hours", "minutes", "seconds"]).toObject();
+
+			let relativeTime = "";
+			if (Math.abs(diffObj.seconds || 0) < 1) {
+				relativeTime = "Ora";
+			} else {
+				// Usa toRelative per un formato più naturale
+				relativeTime = dt.toRelative() || "Ora";
+			}
+
+			html += `<div class="mt-2 pt-2 border-t border-blue-700"><strong>Relativo a ora:</strong> ${relativeTime}</div>`;
+
+			dateResultsContentEl.innerHTML = html;
+			dateResultsEl.classList.remove("hidden");
+		}
+
+		function convertDateToTimestamp() {
+			if (!dateInputEl || !timezoneSelectEl || !timestampResultsEl || !timestampResultsContentEl) return;
+
+			hideError();
+			timestampResultsEl.classList.add("hidden");
+
+			const dateValue = dateInputEl.value;
+			if (!dateValue) {
+				showError("Seleziona una data");
+				return;
+			}
+
+			const timezone = timezoneSelectEl.value as "local" | "utc";
+			let dt;
+
+			try {
+				// Il datetime-local è sempre in locale, quindi creiamo la DateTime locale
+				const localDt = DateTime.fromISO(dateValue);
+				
+				if (!localDt.isValid) {
+					showError(`Data non valida: ${localDt.invalidReason || "errore sconosciuto"}`);
+					return;
+				}
+
+				// Se UTC, converti
+				dt = timezone === "utc" ? localDt.toUTC() : localDt;
+			} catch (error) {
+				showError("Errore durante la conversione della data");
+				return;
+			}
+
+			// Mostra i risultati
+			let html = "";
+			html += `<div><strong>Unix (secondi):</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toUnixInteger()}</code></div>`;
+			html += `<div><strong>Unix (millisecondi):</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toMillis()}</code></div>`;
+			html += `<div><strong>Data ${timezone === "utc" ? "UTC" : "Locale"}:</strong> ${dt.toLocaleString(DateTime.DATETIME_FULL_WITH_SECONDS)}</div>`;
+			html += `<div><strong>ISO 8601:</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${dt.toISO()}</code></div>`;
+
+			timestampResultsContentEl.innerHTML = html;
+			timestampResultsEl.classList.remove("hidden");
+		}
+
+		convertToDateButton?.addEventListener("click", convertTimestampToDate);
+		convertToTimestampButton?.addEventListener("click", convertDateToTimestamp);
+
+		useCurrentButton?.addEventListener("click", () => {
+			if (!timestampInputEl) return;
+			const now = DateTime.now();
+			timestampInputEl.value = now.toUnixInteger().toString();
+			Array.from(timestampUnitRadios).forEach((r) => {
+				r.checked = r.value === "seconds";
+			});
+			convertTimestampToDate();
+		});
+
+		resetButton?.addEventListener("click", () => {
+			if (timestampInputEl) timestampInputEl.value = "";
+			if (dateInputEl) dateInputEl.value = "";
+			if (dateResultsEl) dateResultsEl.classList.add("hidden");
+			if (timestampResultsEl) timestampResultsEl.classList.add("hidden");
+			hideError();
+		});
+
+		// Converti automaticamente quando cambia l'input del timestamp
+		timestampInputEl?.addEventListener("input", () => {
+			if (timestampInputEl.value.trim()) {
+				convertTimestampToDate();
+			}
+		});
+
+		// Converti automaticamente quando cambia la data
+		dateInputEl?.addEventListener("change", () => {
+			if (dateInputEl.value) {
+				convertDateToTimestamp();
+			}
+		});
+
+		timezoneSelectEl?.addEventListener("change", () => {
+			if (dateInputEl?.value) {
+				convertDateToTimestamp();
+			}
+		});
+	});
+</script>
+

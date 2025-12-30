@@ -1,0 +1,381 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+
+const textareaBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none resize-none placeholder:text-gray-600 font-mono";
+const textareaFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const inputBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none placeholder:text-gray-600 font-mono";
+const inputFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const buttonBase =
+	"flex-1 px-6 py-3 text-sm sm:text-base font-semibold text-white rounded-lg transition-colors duration-200 shadow-lg";
+---
+
+<MicroAppLayout pageTitle="Regex Tester" title="Regex Tester">
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<label for="regexInput" class="text-sm font-medium text-gray-400 sm:text-base"> Espressione Regolare </label>
+				<input
+					id="regexInput"
+					type="text"
+					class={`${inputBase} ${inputFocus}`}
+					placeholder="Inserisci la tua regex... Esempio: /[a-z]+/gi"></input>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Flag </label>
+				<div class="flex flex-wrap gap-4">
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagG" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">g (global)</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagI" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">i (case insensitive)</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagM" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">m (multiline)</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagS" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">s (dotall)</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagU" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">u (unicode)</span>
+					</label>
+					<label class="flex items-center gap-2 cursor-pointer">
+						<input type="checkbox" id="flagY" class="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-700 rounded focus:ring-indigo-500" />
+						<span class="text-sm text-gray-300">y (sticky)</span>
+					</label>
+				</div>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label for="testText" class="text-sm font-medium text-gray-400 sm:text-base"> Testo da Testare </label>
+				<textarea
+					id="testText"
+					rows="8"
+					class={`${textareaBase} ${textareaFocus}`}
+					placeholder="Inserisci il testo su cui testare la regex..."></textarea>
+			</div>
+		</div>
+
+		<div id="errorMessage" class="hidden rounded-lg bg-red-900/30 border border-red-800 p-3 text-sm text-red-300"></div>
+
+		<div id="resultsInfo" class="hidden rounded-lg bg-blue-900/30 border border-blue-800 p-4 text-sm text-blue-300">
+			<div id="resultsText"></div>
+		</div>
+
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<div class="flex items-center justify-between">
+					<label class="text-sm font-medium text-gray-400 sm:text-base"> Risultati con Evidenziazione </label>
+					<button
+						id="copyButton"
+						class="hidden px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+					>
+						Copia Testo
+					</button>
+				</div>
+				<div
+					id="highlightedText"
+					class={`${textareaBase} min-h-[200px] whitespace-pre-wrap overflow-auto`}
+					style="background-color: rgb(17, 24, 39);"></div>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Match Trovati </label>
+				<div
+					id="matchesList"
+					class={`${textareaBase} min-h-[150px] max-h-[300px] overflow-y-auto`}
+					style="background-color: rgb(17, 24, 39);"></div>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<button
+				id="testButton"
+				class={`${buttonBase} bg-green-600 hover:bg-green-700 active:bg-green-800 shadow-green-500/20`}
+			>
+				Test Regex
+			</button>
+			<button
+				id="resetButton"
+				class={`${buttonBase} bg-gray-700 hover:bg-gray-600 active:bg-gray-500 shadow-gray-500/20`}
+			>
+				Reset
+			</button>
+		</div>
+	</div>
+</MicroAppLayout>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const testButton = document.getElementById("testButton");
+		const resetButton = document.getElementById("resetButton");
+		const copyButton = document.getElementById("copyButton");
+
+		const regexInputEl = document.getElementById("regexInput") as HTMLInputElement | null;
+		const testTextEl = document.getElementById("testText") as HTMLTextAreaElement | null;
+		const highlightedTextEl = document.getElementById("highlightedText");
+		const matchesListEl = document.getElementById("matchesList");
+		const errorMessageEl = document.getElementById("errorMessage");
+		const resultsInfoEl = document.getElementById("resultsInfo");
+		const resultsTextEl = document.getElementById("resultsText");
+
+		const flagCheckboxes = {
+			g: document.getElementById("flagG") as HTMLInputElement | null,
+			i: document.getElementById("flagI") as HTMLInputElement | null,
+			m: document.getElementById("flagM") as HTMLInputElement | null,
+			s: document.getElementById("flagS") as HTMLInputElement | null,
+			u: document.getElementById("flagU") as HTMLInputElement | null,
+			y: document.getElementById("flagY") as HTMLInputElement | null,
+		};
+
+		function hideError() {
+			if (errorMessageEl) {
+				errorMessageEl.classList.add("hidden");
+				errorMessageEl.textContent = "";
+			}
+		}
+
+		function showError(message: string) {
+			if (errorMessageEl) {
+				errorMessageEl.classList.remove("hidden");
+				errorMessageEl.textContent = message;
+			}
+			if (resultsInfoEl) {
+				resultsInfoEl.classList.add("hidden");
+			}
+			if (copyButton) {
+				copyButton.classList.add("hidden");
+			}
+		}
+
+		function hideResults() {
+			if (resultsInfoEl) {
+				resultsInfoEl.classList.add("hidden");
+			}
+			if (highlightedTextEl) {
+				highlightedTextEl.textContent = "";
+			}
+			if (matchesListEl) {
+				matchesListEl.textContent = "";
+			}
+			if (copyButton) {
+				copyButton.classList.add("hidden");
+			}
+		}
+
+		function showResults(count: number, groupsCount: number) {
+			if (resultsInfoEl && resultsTextEl) {
+				resultsInfoEl.classList.remove("hidden");
+				let text = `<strong>${count}</strong> match trovati`;
+				if (groupsCount > 0) {
+					text += ` con <strong>${groupsCount}</strong> gruppi`;
+				}
+				resultsTextEl.innerHTML = text;
+			}
+			if (copyButton) {
+				copyButton.classList.remove("hidden");
+			}
+		}
+
+		function escapeHtml(text: string): string {
+			const div = document.createElement("div");
+			div.textContent = text;
+			return div.innerHTML;
+		}
+
+		function getFlags(): string {
+			let flags = "";
+			if (flagCheckboxes.g?.checked) flags += "g";
+			if (flagCheckboxes.i?.checked) flags += "i";
+			if (flagCheckboxes.m?.checked) flags += "m";
+			if (flagCheckboxes.s?.checked) flags += "s";
+			if (flagCheckboxes.u?.checked) flags += "u";
+			if (flagCheckboxes.y?.checked) flags += "y";
+			return flags;
+		}
+
+		function testRegex() {
+			if (!regexInputEl || !testTextEl || !highlightedTextEl || !matchesListEl) return;
+
+			hideError();
+			hideResults();
+
+			const regexPattern = regexInputEl.value.trim();
+			const testText = testTextEl.value;
+			const flags = getFlags();
+
+			if (!regexPattern) {
+				showError("Inserisci un'espressione regolare");
+				return;
+			}
+
+			if (!testText) {
+				showError("Inserisci del testo da testare");
+				return;
+			}
+
+			let regex: RegExp;
+			try {
+				// Rimuove eventuali delimitatori iniziali/finali se presenti
+				let pattern = regexPattern;
+				if (pattern.startsWith("/") && pattern.lastIndexOf("/") > 0) {
+					const lastSlash = pattern.lastIndexOf("/");
+					pattern = pattern.slice(1, lastSlash);
+					const extractedFlags = pattern.slice(lastSlash + 1);
+					if (extractedFlags) {
+						// Combina i flag dal pattern con quelli dalle checkbox
+						const combinedFlags = new Set([...extractedFlags, ...flags]);
+						regex = new RegExp(pattern, Array.from(combinedFlags).join(""));
+					} else {
+						regex = new RegExp(pattern, flags || "g");
+					}
+				} else {
+					regex = new RegExp(pattern, flags || "g");
+				}
+			} catch (error) {
+				if (error instanceof Error) {
+					showError(`Errore nella regex: ${error.message}`);
+				} else {
+					showError("Errore nella regex: formato non valido");
+				}
+				return;
+			}
+
+			// Testa la regex
+			const matches: RegExpMatchArray[] = [];
+			let match: RegExpMatchArray | null;
+			const testRegex = new RegExp(regex.source, regex.flags.includes("g") ? regex.flags : regex.flags + "g");
+
+			// Reset lastIndex per sicurezza
+			testRegex.lastIndex = 0;
+
+			while ((match = testRegex.exec(testText)) !== null) {
+				matches.push([...match] as RegExpMatchArray);
+				// Previene loop infiniti se la regex matcha stringa vuota
+				if (match[0].length === 0) {
+					testRegex.lastIndex++;
+					if (testRegex.lastIndex >= testText.length) break;
+				}
+			}
+
+			if (matches.length === 0) {
+				highlightedTextEl.textContent = testText;
+				matchesListEl.innerHTML = '<div class="text-gray-500 italic">Nessun match trovato</div>';
+				showResults(0, 0);
+				return;
+			}
+
+			// Evidenzia i match nel testo
+			let highlightedHtml = "";
+			let lastIndex = 0;
+			let totalGroups = 0;
+
+			matches.forEach((match) => {
+				const matchStart = match.index!;
+				const matchEnd = matchStart + match[0].length;
+
+				// Aggiungi testo prima del match
+				if (matchStart > lastIndex) {
+					highlightedHtml += escapeHtml(testText.substring(lastIndex, matchStart));
+				}
+
+				// Evidenzia il match completo
+				highlightedHtml += `<mark class="bg-yellow-500/30 text-yellow-200 px-0.5 rounded">${escapeHtml(match[0])}</mark>`;
+
+				lastIndex = matchEnd;
+				totalGroups += match.length - 1; // Esclude il match completo, conta solo i gruppi
+			});
+
+			// Aggiungi testo rimanente
+			if (lastIndex < testText.length) {
+				highlightedHtml += escapeHtml(testText.substring(lastIndex));
+			}
+
+			highlightedTextEl.innerHTML = highlightedHtml;
+
+			// Mostra lista dei match
+			let matchesHtml = "";
+			matches.forEach((match, index) => {
+				matchesHtml += `<div class="mb-3 p-3 bg-gray-800/50 rounded border border-gray-700">`;
+				matchesHtml += `<div class="text-sm font-semibold text-indigo-400 mb-2">Match #${index + 1}</div>`;
+				matchesHtml += `<div class="text-sm text-gray-300 mb-1"><strong>Testo:</strong> <code class="bg-gray-900 px-1.5 py-0.5 rounded">${escapeHtml(match[0])}</code></div>`;
+				matchesHtml += `<div class="text-sm text-gray-300 mb-1"><strong>Posizione:</strong> ${match.index} - ${match.index! + match[0].length - 1}</div>`;
+				matchesHtml += `<div class="text-sm text-gray-300 mb-1"><strong>Lunghezza:</strong> ${match[0].length}</div>`;
+
+				if (match.length > 1) {
+					matchesHtml += `<div class="mt-2"><strong class="text-sm text-gray-300">Gruppi:</strong>`;
+					for (let i = 1; i < match.length; i++) {
+						const groupValue = match[i] !== undefined ? match[i] : "(undefined)";
+						matchesHtml += `<div class="text-sm text-gray-400 ml-4 mt-1">Gruppo ${i}: <code class="bg-gray-900 px-1.5 py-0.5 rounded">${escapeHtml(groupValue)}</code></div>`;
+					}
+					matchesHtml += `</div>`;
+				}
+
+				matchesHtml += `</div>`;
+			});
+
+			matchesListEl.innerHTML = matchesHtml;
+			showResults(matches.length, totalGroups);
+		}
+
+		testButton?.addEventListener("click", testRegex);
+
+		// Test automatico quando cambia il testo o la regex (con debounce)
+		let debounceTimer: number | null = null;
+		const autoTest = () => {
+			if (debounceTimer) clearTimeout(debounceTimer);
+			debounceTimer = window.setTimeout(() => {
+				if (regexInputEl?.value.trim() && testTextEl?.value.trim()) {
+					testRegex();
+				}
+			}, 500);
+		};
+
+		regexInputEl?.addEventListener("input", autoTest);
+		testTextEl?.addEventListener("input", autoTest);
+		Object.values(flagCheckboxes).forEach((checkbox) => {
+			checkbox?.addEventListener("change", autoTest);
+		});
+
+		copyButton?.addEventListener("click", () => {
+			if (testTextEl) {
+				testTextEl.select();
+				document.execCommand("copy");
+				const originalText = copyButton.textContent;
+				copyButton.textContent = "Copiato!";
+				setTimeout(() => {
+					if (copyButton) copyButton.textContent = originalText;
+				}, 2000);
+			}
+		});
+
+		resetButton?.addEventListener("click", () => {
+			if (!regexInputEl || !testTextEl) return;
+
+			regexInputEl.value = "";
+			testTextEl.value = "";
+			Object.values(flagCheckboxes).forEach((checkbox) => {
+				if (checkbox) checkbox.checked = false;
+			});
+			hideError();
+			hideResults();
+		});
+	});
+</script>
+
+<style>
+	mark {
+		background-color: rgba(234, 179, 8, 0.3);
+		color: rgb(254, 240, 138);
+	}
+</style>
+

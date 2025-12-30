@@ -1,0 +1,326 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+
+const textareaBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none resize-none placeholder:text-gray-600 font-mono";
+const textareaFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const buttonBase =
+	"flex-1 px-6 py-3 text-sm sm:text-base font-semibold text-white rounded-lg transition-colors duration-200 shadow-lg";
+---
+
+<MicroAppLayout pageTitle="JWT Decoder" title="JWT Decoder">
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-2">
+			<label for="input" class="text-sm font-medium text-gray-400 sm:text-base"> JWT Token </label>
+			<textarea
+				id="input"
+				rows="4"
+				class={`${textareaBase} ${textareaFocus}`}
+				placeholder="Incolla il tuo JWT token qui...&#10;Esempio: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"></textarea>
+		</div>
+
+		<div id="errorMessage" class="hidden rounded-lg bg-red-900/30 border border-red-800 p-3 text-sm text-red-300"></div>
+
+		<div id="tokenInfo" class="hidden rounded-lg bg-blue-900/30 border border-blue-800 p-4 text-sm">
+			<div class="flex flex-col gap-2">
+				<div id="tokenStatus" class="font-semibold"></div>
+				<div id="tokenDetails" class="flex flex-col gap-1 text-gray-300"></div>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-4">
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Header </label>
+				<textarea
+					id="headerOutput"
+					rows="6"
+					readonly
+					class={textareaBase}
+					placeholder="L'header decodificato apparirà qui..."></textarea>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Payload </label>
+				<textarea
+					id="payloadOutput"
+					rows="10"
+					readonly
+					class={textareaBase}
+					placeholder="Il payload decodificato apparirà qui..."></textarea>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<label class="text-sm font-medium text-gray-400 sm:text-base"> Signature </label>
+				<input
+					id="signatureOutput"
+					type="text"
+					readonly
+					class={`${textareaBase} h-auto`}
+					placeholder="La signature apparirà qui..."></input>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<button
+				id="decodeButton"
+				class={`${buttonBase} bg-green-600 hover:bg-green-700 active:bg-green-800 shadow-green-500/20`}
+			>
+				Decode
+			</button>
+			<button
+				id="resetButton"
+				class={`${buttonBase} bg-gray-700 hover:bg-gray-600 active:bg-gray-500 shadow-gray-500/20`}
+			>
+				Reset
+			</button>
+		</div>
+	</div>
+</MicroAppLayout>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+		const decodeButton = document.getElementById("decodeButton");
+		const resetButton = document.getElementById("resetButton");
+
+		const inputEl = document.getElementById("input") as HTMLTextAreaElement | null;
+		const headerOutputEl = document.getElementById("headerOutput") as HTMLTextAreaElement | null;
+		const payloadOutputEl = document.getElementById("payloadOutput") as HTMLTextAreaElement | null;
+		const signatureOutputEl = document.getElementById("signatureOutput") as HTMLInputElement | null;
+		const errorMessageEl = document.getElementById("errorMessage");
+		const tokenInfoEl = document.getElementById("tokenInfo");
+		const tokenStatusEl = document.getElementById("tokenStatus");
+		const tokenDetailsEl = document.getElementById("tokenDetails");
+
+		function hideError() {
+			if (errorMessageEl) {
+				errorMessageEl.classList.add("hidden");
+				errorMessageEl.textContent = "";
+			}
+		}
+
+		function showError(message: string) {
+			if (errorMessageEl) {
+				errorMessageEl.classList.remove("hidden");
+				errorMessageEl.textContent = message;
+			}
+			if (tokenInfoEl) {
+				tokenInfoEl.classList.add("hidden");
+			}
+		}
+
+		function hideTokenInfo() {
+			if (tokenInfoEl) {
+				tokenInfoEl.classList.add("hidden");
+			}
+		}
+
+		function showTokenInfo(status: string, details: string[]) {
+			if (tokenInfoEl && tokenStatusEl && tokenDetailsEl) {
+				tokenInfoEl.classList.remove("hidden");
+				tokenStatusEl.textContent = status;
+				tokenDetailsEl.innerHTML = details.map((detail) => `<div>${detail}</div>`).join("");
+			}
+		}
+
+		// Converte base64url in base64 standard
+		function base64UrlToBase64(base64Url: string): string {
+			let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+			// Aggiunge padding se necessario
+			while (base64.length % 4) {
+				base64 += "=";
+			}
+			return base64;
+		}
+
+		// Decodifica base64url
+		function decodeBase64Url(base64Url: string): string | null {
+			try {
+				const base64 = base64UrlToBase64(base64Url);
+				return atob(base64);
+			} catch (error) {
+				return null;
+			}
+		}
+
+		// Formatta una data timestamp
+		function formatTimestamp(timestamp: number): string {
+			const date = new Date(timestamp * 1000);
+			return date.toLocaleString("it-IT", {
+				year: "numeric",
+				month: "2-digit",
+				day: "2-digit",
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+				timeZoneName: "short",
+			});
+		}
+
+		// Verifica se il token è scaduto
+		function isTokenExpired(exp: number | undefined): boolean {
+			if (!exp) return false;
+			return Date.now() / 1000 > exp;
+		}
+
+		// Estrae informazioni utili dal payload
+		function extractTokenInfo(payload: any): { status: string; details: string[] } {
+			const details: string[] = [];
+			let status = "Token valido";
+
+			if (payload.exp) {
+				const expired = isTokenExpired(payload.exp);
+				if (expired) {
+					status = "⚠️ Token scaduto";
+				}
+				details.push(`<strong>Expires:</strong> ${formatTimestamp(payload.exp)} ${expired ? "(scaduto)" : ""}`);
+			}
+
+			if (payload.iat) {
+				details.push(`<strong>Issued At:</strong> ${formatTimestamp(payload.iat)}`);
+			}
+
+			if (payload.nbf) {
+				const notYetValid = Date.now() / 1000 < payload.nbf;
+				details.push(`<strong>Not Before:</strong> ${formatTimestamp(payload.nbf)} ${notYetValid ? "(non ancora valido)" : ""}`);
+			}
+
+			if (payload.iss) {
+				details.push(`<strong>Issuer:</strong> ${payload.iss}`);
+			}
+
+			if (payload.sub) {
+				details.push(`<strong>Subject:</strong> ${payload.sub}`);
+			}
+
+			if (payload.aud) {
+				const aud = Array.isArray(payload.aud) ? payload.aud.join(", ") : payload.aud;
+				details.push(`<strong>Audience:</strong> ${aud}`);
+			}
+
+			if (payload.azp) {
+				details.push(`<strong>Authorized Party:</strong> ${payload.azp}`);
+			}
+
+			if (payload.jti) {
+				details.push(`<strong>JWT ID:</strong> ${payload.jti}`);
+			}
+
+			return { status, details };
+		}
+
+		function decodeJWT(token: string): {
+			success: boolean;
+			header?: any;
+			payload?: any;
+			signature?: string;
+			error?: string;
+		} {
+			const parts = token.trim().split(".");
+			if (parts.length !== 3) {
+				return {
+					success: false,
+					error: "Formato JWT non valido. Un JWT deve avere 3 parti separate da punti.",
+				};
+			}
+
+			const [headerEncoded, payloadEncoded, signature] = parts;
+
+			// Decodifica header
+			const headerDecoded = decodeBase64Url(headerEncoded);
+			if (!headerDecoded) {
+				return {
+					success: false,
+					error: "Impossibile decodificare l'header. Controlla che sia un base64url valido.",
+				};
+			}
+
+			let header: any;
+			try {
+				header = JSON.parse(headerDecoded);
+			} catch (error) {
+				return {
+					success: false,
+					error: "L'header non è un JSON valido.",
+				};
+			}
+
+			// Decodifica payload
+			const payloadDecoded = decodeBase64Url(payloadEncoded);
+			if (!payloadDecoded) {
+				return {
+					success: false,
+					error: "Impossibile decodificare il payload. Controlla che sia un base64url valido.",
+				};
+			}
+
+			let payload: any;
+			try {
+				payload = JSON.parse(payloadDecoded);
+			} catch (error) {
+				return {
+					success: false,
+					error: "Il payload non è un JSON valido.",
+				};
+			}
+
+			return {
+				success: true,
+				header,
+				payload,
+				signature,
+			};
+		}
+
+		decodeButton?.addEventListener("click", () => {
+			if (!inputEl || !headerOutputEl || !payloadOutputEl || !signatureOutputEl) return;
+
+			hideError();
+			hideTokenInfo();
+
+			const token = inputEl.value.trim();
+
+			if (!token) {
+				showError("Inserisci un JWT token da decodificare");
+				return;
+			}
+
+			const result = decodeJWT(token);
+
+			if (!result.success) {
+				showError(result.error || "Errore durante la decodifica");
+				headerOutputEl.value = "";
+				payloadOutputEl.value = "";
+				signatureOutputEl.value = "";
+				return;
+			}
+
+			// Mostra header formattato
+			headerOutputEl.value = JSON.stringify(result.header, null, 2);
+
+			// Mostra payload formattato
+			payloadOutputEl.value = JSON.stringify(result.payload, null, 2);
+
+			// Mostra signature
+			signatureOutputEl.value = result.signature || "";
+
+			// Mostra informazioni del token
+			if (result.payload) {
+				const info = extractTokenInfo(result.payload);
+				showTokenInfo(info.status, info.details);
+			}
+		});
+
+		resetButton?.addEventListener("click", () => {
+			if (!inputEl || !headerOutputEl || !payloadOutputEl || !signatureOutputEl) return;
+
+			inputEl.value = "";
+			headerOutputEl.value = "";
+			payloadOutputEl.value = "";
+			signatureOutputEl.value = "";
+			hideError();
+			hideTokenInfo();
+		});
+	});
+</script>
+

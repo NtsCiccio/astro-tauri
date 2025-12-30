@@ -1,0 +1,241 @@
+---
+import MicroAppLayout from "../../layouts/MicroAppLayout.astro";
+
+const textareaBase =
+	"w-full text-sm sm:text-base text-gray-50 bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 focus:outline-none resize-none placeholder:text-gray-600 font-mono";
+const textareaFocus = "focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
+
+const buttonBase =
+	"flex-1 px-6 py-3 text-sm sm:text-base font-semibold text-white rounded-lg transition-colors duration-200 shadow-lg";
+---
+
+<MicroAppLayout pageTitle="YAML Validator" title="YAML Validator & Formatter">
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-2">
+			<label for="input" class="text-sm font-medium text-gray-400 sm:text-base"> Input YAML </label>
+			<textarea
+				id="input"
+				rows="12"
+				class={`${textareaBase} ${textareaFocus}`}
+				placeholder="Inserisci il YAML da validare o formattare...&#10;Esempio:&#10;name: test&#10;value: 123&#10;items:&#10;  - item1&#10;  - item2"></textarea>
+		</div>
+
+		<div id="errorMessage" class="hidden rounded-lg bg-red-900/30 border border-red-800 p-3 text-sm text-red-300"></div>
+
+		<div class="flex flex-col gap-2">
+			<div class="flex items-center justify-between">
+				<label for="output" class="text-sm font-medium text-gray-400 sm:text-base"> Output </label>
+				<div class="flex items-center gap-2 text-xs text-gray-500">
+					<span id="charCount">0 caratteri</span>
+				</div>
+			</div>
+			<textarea
+				id="output"
+				rows="12"
+				readonly
+				class={textareaBase}
+				placeholder="Il YAML formattato apparirà qui..."></textarea>
+		</div>
+
+		<div class="flex flex-col gap-3 sm:flex-row">
+			<button
+				id="formatButton"
+				class={`${buttonBase} bg-green-600 hover:bg-green-700 active:bg-green-800 shadow-green-500/20`}
+			>
+				Format
+			</button>
+			<button
+				id="validateButton"
+				class={`${buttonBase} bg-purple-600 hover:bg-purple-700 active:bg-purple-800 shadow-purple-500/20`}
+			>
+				Validate
+			</button>
+			<button
+				id="convertToJsonButton"
+				class={`${buttonBase} bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-blue-500/20`}
+			>
+				Convert to JSON
+			</button>
+			<button
+				id="resetButton"
+				class={`${buttonBase} bg-gray-700 hover:bg-gray-600 active:bg-gray-500 shadow-gray-500/20`}
+			>
+				Reset
+			</button>
+		</div>
+	</div>
+</MicroAppLayout>
+
+<script>
+	document.addEventListener("DOMContentLoaded", async () => {
+		// Import dinamico di js-yaml per il client-side
+		// @ts-expect-error - js-yaml include i suoi tipi, ma TypeScript non li risolve correttamente in questo contesto
+		const yaml = await import("js-yaml");
+
+		const formatButton = document.getElementById("formatButton");
+		const validateButton = document.getElementById("validateButton");
+		const convertToJsonButton = document.getElementById("convertToJsonButton");
+		const resetButton = document.getElementById("resetButton");
+
+		const inputEl = document.getElementById("input") as HTMLTextAreaElement | null;
+		const outputEl = document.getElementById("output") as HTMLTextAreaElement | null;
+		const errorMessageEl = document.getElementById("errorMessage");
+		const charCountEl = document.getElementById("charCount");
+
+		function hideError() {
+			if (errorMessageEl) {
+				errorMessageEl.classList.add("hidden");
+				errorMessageEl.textContent = "";
+			}
+		}
+
+		function showError(message: string) {
+			if (errorMessageEl) {
+				errorMessageEl.classList.remove("hidden");
+				errorMessageEl.textContent = message;
+			}
+		}
+
+		function showSuccess(message: string) {
+			if (errorMessageEl) {
+				errorMessageEl.classList.remove("hidden", "bg-red-900/30", "border-red-800", "text-red-300");
+				errorMessageEl.classList.add("bg-green-900/30", "border-green-800", "text-green-300");
+				errorMessageEl.textContent = message;
+			}
+		}
+
+		function updateCharCount(text: string) {
+			if (charCountEl) {
+				charCountEl.textContent = `${text.length} caratteri`;
+			}
+		}
+
+		function formatYAML(yamlString: string): { success: boolean; result?: string; error?: string } {
+			if (!yamlString.trim()) {
+				return { success: false, error: "Il campo input è vuoto" };
+			}
+
+			try {
+				// Parse e re-stringify per formattare
+				const parsed = yaml.load(yamlString, { schema: yaml.DEFAULT_SCHEMA });
+				const formatted = yaml.dump(parsed, {
+					indent: 2,
+					lineWidth: -1, // Nessun limite di lunghezza riga
+					noRefs: true,
+					sortKeys: false,
+				});
+				return { success: true, result: formatted };
+			} catch (error) {
+				if (error instanceof Error) {
+					return { success: false, error: error.message };
+				}
+				return { success: false, error: "Errore sconosciuto durante la formattazione" };
+			}
+		}
+
+		function validateYAML(yamlString: string): { valid: boolean; error?: string } {
+			if (!yamlString.trim()) {
+				return { valid: false, error: "Il campo input è vuoto" };
+			}
+
+			try {
+				yaml.load(yamlString, { schema: yaml.DEFAULT_SCHEMA });
+				return { valid: true };
+			} catch (error) {
+				if (error instanceof Error) {
+					return { valid: false, error: error.message };
+				}
+				return { valid: false, error: "Errore sconosciuto durante la validazione" };
+			}
+		}
+
+		function convertYAMLToJSON(yamlString: string): { success: boolean; result?: string; error?: string } {
+			if (!yamlString.trim()) {
+				return { success: false, error: "Il campo input è vuoto" };
+			}
+
+			try {
+				const parsed = yaml.load(yamlString, { schema: yaml.DEFAULT_SCHEMA });
+				const json = JSON.stringify(parsed, null, 2);
+				return { success: true, result: json };
+			} catch (error) {
+				if (error instanceof Error) {
+					return { success: false, error: error.message };
+				}
+				return { success: false, error: "Errore sconosciuto durante la conversione" };
+			}
+		}
+
+		formatButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			hideError();
+			const input = inputEl.value;
+
+			const result = formatYAML(input);
+			if (result.success && result.result) {
+				outputEl.value = result.result;
+				updateCharCount(result.result);
+				showSuccess("✓ YAML formattato con successo!");
+			} else {
+				showError(`✗ Errore: ${result.error || "Errore sconosciuto"}`);
+				outputEl.value = "";
+				updateCharCount("");
+			}
+		});
+
+		validateButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			hideError();
+			const input = inputEl.value;
+
+			const result = validateYAML(input);
+			if (result.valid) {
+				// Se valido, formatta anche l'output
+				const formatted = formatYAML(input);
+				if (formatted.success && formatted.result) {
+					outputEl.value = formatted.result;
+					updateCharCount(formatted.result);
+				}
+				showSuccess("✓ YAML valido!");
+			} else {
+				showError(`✗ YAML non valido: ${result.error || "Errore sconosciuto"}`);
+				errorMessageEl?.classList.remove("bg-green-900/30", "border-green-800", "text-green-300");
+				errorMessageEl?.classList.add("bg-red-900/30", "border-red-800", "text-red-300");
+				outputEl.value = "";
+				updateCharCount("");
+			}
+		});
+
+		convertToJsonButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			hideError();
+			const input = inputEl.value;
+
+			const result = convertYAMLToJSON(input);
+			if (result.success && result.result) {
+				outputEl.value = result.result;
+				updateCharCount(result.result);
+				showSuccess("✓ YAML convertito in JSON con successo!");
+			} else {
+				showError(`✗ Errore durante la conversione: ${result.error || "Errore sconosciuto"}`);
+				errorMessageEl?.classList.remove("bg-green-900/30", "border-green-800", "text-green-300");
+				errorMessageEl?.classList.add("bg-red-900/30", "border-red-800", "text-red-300");
+				outputEl.value = "";
+				updateCharCount("");
+			}
+		});
+
+		resetButton?.addEventListener("click", () => {
+			if (!inputEl || !outputEl) return;
+
+			inputEl.value = "";
+			outputEl.value = "";
+			hideError();
+			updateCharCount("");
+		});
+	});
+</script>
+
